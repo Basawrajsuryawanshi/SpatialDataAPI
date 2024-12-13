@@ -1,0 +1,73 @@
+{
+	"info": {
+		"_postman_id": "9820ae67-c94a-487a-925a-7d3f180d8eef",
+		"name": "New Collection",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "22817194",
+		"_collection_link": "https://orange-astronaut-937495.postman.co/workspace/New-Team-Workspace~129f5153-9164-4d25-b1fa-d2fe08abd019/collection/22817194-9820ae67-c94a-487a-925a-7d3f180d8eef?action=share&source=collection_link&creator=22817194"
+	},
+	"item": [
+		{
+			"name": "http://127.0.0.1:5000/points",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "\r\n{\r\n    \"name\": \"Paris\",\r\n  \"latitude\": 48.8584,\r\n  \"longitude\": 2.2945\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:5000/points",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "5000",
+					"path": [
+						"points"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://127.0.0.1:5000/polygons",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "\r\n{\r\n  \"name\": \"France\",\r\n  \"polygon_wkt\": \"POLYGON((2.2634 48.8156, 2.4697 48.8156, 2.4697 48.9021, 2.2634 48.9021, 2.2634 48.8156))\"\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:5000/polygons",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "5000",
+					"path": [
+						"polygons"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
