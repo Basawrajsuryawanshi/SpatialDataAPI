@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify , redirect
 import pyodbc
 
 app = Flask(__name__)
@@ -26,8 +26,14 @@ def get_db_connection():
         print("Error while connecting to the database:", e)
         return None
     
+    #4326 identifies the WGS 84 coordinate system (latitude and longitude on Earth).
+    # Redirect root URL to /points
+@app.route('/')
+def redirect_to_points():
+    return redirect('/points')
 
-@app.route('/points', methods=['POST', 'GET'])
+
+@app.route('/points', methods=['POST', 'GET', 'PUT'])
 def points():
     try:
         conn = get_db_connection()
@@ -39,8 +45,7 @@ def points():
         if request.method == 'POST':
             data = request.json
 
-            # If data is a list (multiple points)
-            if isinstance(data, list):
+            if isinstance(data, list):  # Multiple points
                 for point in data:
                     name = point.get('name')
                     lat = point.get('latitude')
@@ -54,8 +59,7 @@ def points():
                 conn.commit()
                 return jsonify({"message": "Points added successfully"}), 201
 
-            # If data is a single point
-            elif isinstance(data, dict):
+            elif isinstance(data, dict):  # Single point
                 name = data.get('name')
                 lat = data.get('latitude')
                 lon = data.get('longitude')
@@ -77,6 +81,29 @@ def points():
             results = [{"id": row[0], "name": row[1], "location": row[2]} for row in points]
             return jsonify(results)
 
+        elif request.method == 'PUT':
+            data = request.json
+            point_id = data.get('id')
+            name = data.get('name')
+            lat = data.get('latitude')
+            lon = data.get('longitude')
+
+            if not point_id or not name or lat is None or lon is None:
+                return jsonify({"error": "Missing required data"}), 400
+
+            query = """
+            UPDATE Points
+            SET Name = ?, Location = geography::Point(?, ?, 4326)
+            WHERE Id = ?
+            """
+            cursor.execute(query, name, lat, lon, point_id)
+            conn.commit()
+
+            if cursor.rowcount == 0:
+                return jsonify({"error": "Point not found"}), 404
+
+            return jsonify({"message": "Point updated successfully"}), 200
+
     except Exception as e:
         print(f"Error while handling request: {e}")
         return jsonify({"error": "An error occurred while processing your request"}), 500
@@ -85,46 +112,39 @@ def points():
         if conn:
             conn.close()
 
-@app.route('/polygons', methods=['POST', 'GET'])
+
+@app.route('/polygons', methods=['POST', 'GET', 'PUT'])
 def polygons():
     try:
-        # Establish database connection
         conn = get_db_connection()
         if not conn:
             return jsonify({"error": "Database connection failed"}), 500
 
         cursor = conn.cursor()
 
-        # Handle POST request
         if request.method == 'POST':
             data = request.json
 
-            # If data is a list (multiple polygons)
-            if isinstance(data, list):
+            if isinstance(data, list):  # Multiple polygons
                 for polygon in data:
                     name = polygon.get('name')
                     polygon_wkt = polygon.get('polygon_wkt')
 
-                    # Validate incoming data
                     if not name or not polygon_wkt:
                         return jsonify({"error": "Missing required data for polygon"}), 400
 
-                    # Insert polygon into the database
                     query = "INSERT INTO Polygons (Name, Area) VALUES (?, geography::STPolyFromText(?, 4326))"
                     cursor.execute(query, name, polygon_wkt)
                 conn.commit()
                 return jsonify({"message": "Polygons added successfully"}), 201
 
-            # If data is a single polygon
-            elif isinstance(data, dict):
+            elif isinstance(data, dict):  # Single polygon
                 name = data.get('name')
                 polygon_wkt = data.get('polygon_wkt')
 
-                # Validate incoming data
                 if not name or not polygon_wkt:
                     return jsonify({"error": "Missing required data for polygon"}), 400
 
-                # Insert polygon into the database
                 query = "INSERT INTO Polygons (Name, Area) VALUES (?, geography::STPolyFromText(?, 4326))"
                 cursor.execute(query, name, polygon_wkt)
                 conn.commit()
@@ -133,66 +153,42 @@ def polygons():
             else:
                 return jsonify({"error": "Invalid data format"}), 400
 
-        # Handle GET request
         elif request.method == 'GET':
             cursor.execute("SELECT Id, Name, Area.ToString() AS Area FROM Polygons")
             polygons = cursor.fetchall()
             results = [{"id": row[0], "name": row[1], "area": row[2]} for row in polygons]
             return jsonify(results)
 
+        elif request.method == 'PUT':
+            data = request.json
+            polygon_id = data.get('id')
+            name = data.get('name')
+            polygon_wkt = data.get('polygon_wkt')
+
+            if not polygon_id or not name or not polygon_wkt:
+                return jsonify({"error": "Missing required data"}), 400
+
+            query = """
+            UPDATE Polygons
+            SET Name = ?, Area = geography::STPolyFromText(?, 4326)
+            WHERE Id = ?
+            """
+            cursor.execute(query, name, polygon_wkt, polygon_id)
+            conn.commit()
+
+            if cursor.rowcount == 0:
+                return jsonify({"error": "Polygon not found"}), 404
+
+            return jsonify({"message": "Polygon updated successfully"}), 200
+
     except Exception as e:
-        # Log the error
         print(f"Error while handling request: {e}")
         return jsonify({"error": "An error occurred while processing your request"}), 500
 
     finally:
-        # Close database connection
         if conn:
             conn.close()
 
-
-@app.route('/check_point_in_polygon', methods=['POST'])
-def check_point_in_polygon():
-    try:
-        conn = get_db_connection()
-        if not conn:
-            return jsonify({"error": "Database connection failed"}), 500
-
-        cursor = conn.cursor()
-
-        # Get the request data
-        data = request.json
-        point_lat = data.get('latitude')
-        point_lon = data.get('longitude')
-        polygon_id = data.get('polygon_id')
-
-        if point_lat is None or point_lon is None or polygon_id is None:
-            return jsonify({"error": "Missing required data (latitude, longitude, or polygon_id)"}), 400
-
-        # Query to check if the point is inside the polygon
-        query = """
-        SELECT CASE
-            WHEN Area.STContains(geography::Point(?, ?, 4326)) = 1 THEN 'Inside'
-            ELSE 'Outside'
-        END AS result
-        FROM Polygons
-        WHERE Id = ?
-        """
-        cursor.execute(query, point_lon, point_lat, polygon_id)
-        result = cursor.fetchone()
-
-        if result:
-            return jsonify({"result": result[0]}), 200
-        else:
-            return jsonify({"error": "Polygon not found"}), 404
-
-    except Exception as e:
-        print(f"Error while checking if point is inside polygon: {e}")
-        return jsonify({"error": "An error occurred while processing your request"}), 500
-
-    finally:
-        if conn:
-            conn.close()
 
 
 if __name__ == '__main__':
