@@ -68,6 +68,68 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "http://127.0.0.1:5000/points",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "\r\n{\r\n    \"id\": 10,\r\n    \"name\": \"Updated Point\",\r\n    \"latitude\": 48.8584,\r\n    \"longitude\": 2.2945\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:5000/points",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "5000",
+					"path": [
+						"points"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://127.0.0.1:5000/polygons",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"id\": 8,\r\n    \"name\": \"Updated Polygon\",\r\n    \"polygon_wkt\": \"POLYGON((2.2634 48.8156, 2.4697 48.8156, 2.4697 48.9021, 2.2634 48.9021, 2.2634 48.8156))\"\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:5000/polygons",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "5000",
+					"path": [
+						"polygons"
+					]
+				}
+			},
+			"response": []
 		}
 	]
 }
