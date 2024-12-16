@@ -27,13 +27,15 @@ GET /polygons - Retrieve all polygons.
 
 Example Data:
   [
-  {"name": "Point 1", "latitude": 48.8584, "longitude": 2.2945},
-  {"name": "Point 2", "latitude": 40.785091, "longitude": -73.968285}
+  {
+  "name": "Paris",
+  "latitude": 48.8584,
+  "longitude": 2.2945
+}
 ]
 
 {
-  "name": "Paris",
+  "name": "France",
   "polygon_wkt": "POLYGON((2.2634 48.8156, 2.4697 48.8156, 2.4697 48.9021, 2.2634 48.9021, 2.2634 48.8156))"
 }
-
 
